@@ -5,7 +5,7 @@
 `git clone https://github.com/0x636174/terminal-bucket.git`
 
 ### Install:
-`cd terminalBucket && npm install`
+`cd terminal-bucket && npm install`
 
 ### Setup:
 Create an `.env` with the following:
