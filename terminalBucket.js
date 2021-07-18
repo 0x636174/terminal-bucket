@@ -1,7 +1,7 @@
-const { splash } = require('./splash');
+const { splash } = require('./screens/splash');
 const { buildPrList, buildComments } = require('./builders');
 const { promptPrSelectionPage, promptCommentsPage } = require('./prompts');
-const { cl, clear, rand, colorList } = require('./help');
+const { cl, clear, rand, colorList } = require('./helpers');
 const requestOptions = require('./config');
 
 if (requestOptions.pull_request_id) {

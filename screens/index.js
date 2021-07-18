@@ -1,5 +1,5 @@
 const formatDistance = require('date-fns/formatDistance');
-const { n, c, cl, clear, maxWidth, bar } = require('./help');
+const { n, c, cl, clear, maxWidth, bar } = require('../helpers');
 
 // Pull Request Page
 const displayPrList = (prs) => {

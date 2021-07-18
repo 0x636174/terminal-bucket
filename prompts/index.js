@@ -1,9 +1,9 @@
 const readline = require('readline');
 const util = require('util');
-const { buildPrList, buildComments, buildDiff } = require('./builders');
-const { createComment } = require('./apiCalls');
-const { n, c, cl, clear, bar } = require('./help');
-const requestOptions = require('./config');
+const { buildPrList, buildComments, buildDiff } = require('../builders');
+const { createComment } = require('../api');
+const { n, c, cl, clear, bar } = require('../helpers');
+const requestOptions = require('../config');
 
 const rl = readline.createInterface({
     input: process.stdin,
