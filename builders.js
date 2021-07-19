@@ -1,6 +1,5 @@
 const { getAllPrs, getPrActivity, getPrData, getParentCommentData, getDiff } = require('./api');
 const { displayPrList, displayComments, displayDiff } = require('./screens');
-// const { cl } = require('./helpers');
 
 // PR List
 const buildPrList = (options) => getAllPrs(options)
