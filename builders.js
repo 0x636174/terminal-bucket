@@ -1,6 +1,6 @@
 const { getAllPrs, getPrActivity, getPrData, getParentCommentData, getDiff } = require('./api');
 const { displayPrList, displayComments, displayDiff } = require('./screens');
-const { cl } = require('./helpers');
+// const { cl } = require('./helpers');
 
 // PR List
 const buildPrList = (options) => getAllPrs(options)
@@ -19,10 +19,10 @@ const buildPrList = (options) => getAllPrs(options)
 
 // Comments
 const buildComments = (options) => getPrData(options).then(async (allData) => {
-    if (allData?.values?.length === 0) {
-        cl('No Comments on this PR yet...', 'brightRed')
-        return buildPrList(options)
-    }
+    // if (allData?.values?.length === 0) {
+    //     cl('No Comments on this PR yet...', 'brightRed')
+    //     return buildPrList(options)
+    // }
 
     const updatedParents = await allData?.values?.map(async (item, index) => {
         item.parent && await getParentCommentData(options, item?.parent?.id).then(parentData => item.parent = parentData)

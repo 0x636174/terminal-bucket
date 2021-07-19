@@ -23,7 +23,10 @@ const promptPrSelectionPage = async (allPrs) => {
         cl('This may take a while depending on the amount of changes...', 'magenta')
         const selectedPr = allPrs.values[prSelection.toLowerCase().match(/((d)(\d+))/)[3]].id
         buildDiff({ ...requestOptions, pull_request_id: selectedPr }).then(x => promptDiffOptions(x, 'prSelection'))
-    } else if (prSelection <= allPrs.values.length - 1) {
+    } else if (allPrs.values[prSelection].comment_count === 0) {
+        cl('No comments on this pr yet...', 'brightRed');
+        return buildPrList(requestOptions).then(promptPrSelectionPage);
+    }else if (prSelection <= allPrs.values.length - 1) {
         c('Loading PR...')
         try {
             return buildComments({ ...requestOptions, page: 1, pull_request_id: allPrs.values[prSelection]?.id }).then(promptCommentsPage)
