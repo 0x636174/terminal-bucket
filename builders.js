@@ -1,5 +1,6 @@
-const { getAllPrs, getPrActivity, getPrData, getParentCommentData, getDiff } = require('./api');
-const { displayPrList, displayComments, displayDiff } = require('./screens');
+const { getAllPrs, getPrActivity, getPrData, getParentCommentData, getDiff, getPr, getDiffStat } = require('./api');
+const { c } = require('./helpers');
+const { displayPrList, displayComments, displayDiff, displayPrOverview } = require('./screens');
 
 // PR List
 const buildPrList = (options) => getAllPrs(options)
@@ -30,8 +31,17 @@ const buildComments = (options) => getPrData(options).then(async (allData) => {
 // Diff
 const buildDiff = (options) => getDiff(options).then(
     x => {
-        displayDiff(x)
+        displayDiff(x.data)
         return x.prId
     })
 
-module.exports = { buildPrList, buildComments, buildDiff }
+// PR Overview
+const buildPrOverview = (options) => getPr(options).then(async (prData) => {
+    // c(options)
+    const diffStat = await getDiffStat({...options, pagelen: undefined})
+    // c(diffStat)
+    displayPrOverview({prData, diffStat})
+    return {prData, diffStat}
+})
+
+module.exports = { buildPrList, buildComments, buildDiff, buildPrOverview }

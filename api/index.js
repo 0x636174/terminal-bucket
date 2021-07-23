@@ -45,4 +45,14 @@ const getDiff = async (requestOptions) => {
     return { data, prId: requestOptions.pull_request_id }
 }
 
-module.exports = { getAllPrs, getPrData, getParentCommentData, createComment, getPrActivity, getDiff }
+const getPr = async (requestOptions) => {
+    const { data } = await bitbucket.pullrequests.get({ ...requestOptions })
+    return { data }
+}
+
+const getDiffStat = async (requestOptions) => {
+    const { data } = await bitbucket.pullrequests.getDiffStat({ ...requestOptions })
+    return { data }
+}
+
+module.exports = { getAllPrs, getPrData, getParentCommentData, createComment, getPrActivity, getDiff, getPr, getDiffStat}
