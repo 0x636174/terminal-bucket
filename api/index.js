@@ -21,8 +21,8 @@ const getAllPrs = async (requestOptions) => {
 }
 
 const getPrData = async (requestOptions) => {
-        const { data } = await bitbucket.pullrequests.listComments(requestOptions)
-        return data
+    const { data } = await bitbucket.pullrequests.listComments(requestOptions)
+    return data
 }
 
 const getParentCommentData = async (requestOptions, comment_id) => {
@@ -31,7 +31,7 @@ const getParentCommentData = async (requestOptions, comment_id) => {
 }
 
 const createComment = async (commentOptions) => {
-    const { data } = await bitbucket.pullrequests.createComment({...commentOptions })
+    const { data } = await bitbucket.pullrequests.createComment({ ...commentOptions })
     return data
 }
 
@@ -55,4 +55,10 @@ const getDiffStat = async (requestOptions) => {
     return { data }
 }
 
-module.exports = { getAllPrs, getPrData, getParentCommentData, createComment, getPrActivity, getDiff, getPr, getDiffStat}
+const approvePr = async (requestOptions) => {
+    const { data } = await bitbucket.pullrequests.createApproval({ ...requestOptions })
+    return data
+}
+
+
+module.exports = { getAllPrs, getPrData, getParentCommentData, createComment, getPrActivity, getDiff, getPr, getDiffStat, approvePr }

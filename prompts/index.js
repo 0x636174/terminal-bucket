@@ -1,7 +1,7 @@
 const readline = require('readline');
 const util = require('util');
 const { buildPrList, buildComments, buildDiff, buildPrOverview } = require('../builders');
-const { createComment, getDiffStat, getDiff } = require('../api');
+const { createComment, getDiffStat, getDiff, approvePr } = require('../api');
 const { displayFileList, displayDiff, displayPrOverview } = require('../screens');
 const { n, c, cl, clear, bar } = require('../helpers');
 const requestOptions = require('../config');
@@ -77,7 +77,7 @@ const promptCommentsPage = async (x) => {
         }
         c('Loading...')
         buildComments({ ...requestOptions, pull_request_id: prId, page: requestOptions.page -= 1 }).then(promptCommentsPage)
-    } 
+    }
     // else if (input.toLowerCase() === 'l') {
     //     c('Fetching PR list...')
     //     return buildPrList({ ...requestOptions, page: 1 }).then(promptPrSelectionPage)
@@ -156,16 +156,27 @@ const promptPrOverview = async (pr) => {
     // const prId = pr.
     // c(pr)
 
-    const input = await question(`(c) comments, (f) files, (l) list pr's: `);
+    const input = await question(`(c) comments, (f) files, (a) approve, (l) list pr's: `);
     if (input.toLowerCase() === 'f') {
         displayFileList(ds)
         return promptFileList(pr)
     } else if (input.toLowerCase() === 'c') {
         // c(pr)
         return buildComments({ ...requestOptions, page: 1, pull_request_id: pr.prData.data.id }).then(promptCommentsPage)
-    } else if (input.toLowerCase() === 'b') {
+    } else if (input.toLowerCase() === 'l') {
         cl('Loading...', 'brightRed')
         return buildPrList(requestOptions).then(promptPrSelectionPage)
+    } else if (input.toLowerCase() === 'a') {
+        const confirmApprove = await question(`Are you sure you want to approve PR-${pr.prData.data.id}? (y/n): `)
+        if (confirmApprove.toLowerCase() === 'y') {
+            c(n)
+            await approvePr({ ...requestOptions, pull_request_id: pr.prData.data.id }).then(x => {
+                cl('Approved!', 'green');
+                return buildPrList(requestOptions).then(promptPrSelectionPage)
+            })
+        } else {
+            return promptPrOverview(pr)
+        }
     } else {
         c(n)
         cl('Invalid Selection...', 'brightRed')

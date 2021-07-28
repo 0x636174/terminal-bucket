@@ -12,7 +12,11 @@ const buildPrList = (options) => getAllPrs(options)
         })
 
         await Promise.all(activity)
-        displayPrList(allPrs)
+        if (allPrs?.values?.length === 0) {
+            c('No pull requests to show')
+        } else {
+            displayPrList(allPrs)
+        }
 
         return allPrs
     })
