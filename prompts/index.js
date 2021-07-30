@@ -17,7 +17,7 @@ const question = util.promisify(rl.question).bind(rl);
 const promptPrSelectionPage = async (allPrs) => {
     const prSelection = await question(`(0-${allPrs.values.length - 1}) select pr, (d0-${allPrs.values.length - 1}) view diff, (r) refresh: `)
     if (prSelection.toLowerCase() === 'r') {
-        c('Updating Data...')
+        cl('Updating Data...', 'brightRed')
         buildPrList({ ...requestOptions, page: 1 }).then(promptPrSelectionPage)
     }
     else if (prSelection.toLowerCase().match(/(d\d+)/)) {
@@ -31,7 +31,7 @@ const promptPrSelectionPage = async (allPrs) => {
     //     return buildPrList(requestOptions).then(promptPrSelectionPage);
     // }
     else if (prSelection <= allPrs.values.length - 1) {
-        c('Loading PR...')
+        cl('Loading PR...', 'brightRed')
         return buildPrOverview({ ...requestOptions, pull_request_id: allPrs.values[prSelection].id }).then(pr => { promptPrOverview(pr) })
         // try {
         //     return buildComments({ ...requestOptions, page: 1, pull_request_id: allPrs.values[prSelection]?.id }).then(promptCommentsPage)
@@ -47,51 +47,56 @@ const promptPrSelectionPage = async (allPrs) => {
 }
 
 // Comments Prompt
-const promptCommentsPage = async (x) => {
+const promptCommentsPage = async (x, pr) => {
     const prId = x.values[0].pullrequest.id
     const isFirstPage = x?.page === 1 && '(h) previous,';
     const isLastPage = x?.size / x?.pagelen <= x?.page && '(n) next,'
     c(n)
     const input = await question(
-        `(0-${x?.values?.length - 1}) reply, (r) refresh, (n) next, (h) previous, (d) diff, (b) back: `
+        `(l) leave comment \n(0-${x?.values?.length - 1}) reply \n(n) next \n(h) previous \n(d) diff \n(r) refresh \n(b) back to overview: \n\n`
     );
 
     if (input.toLowerCase() === 'r') {
-        c('Updating data...')
+        cl('Updating data...', 'brightRed')
         return buildComments({ ...requestOptions, pull_request_id: prId }).then(promptCommentsPage)
-    } else if (input.toLowerCase() === 'q') {
-        c('Exiting...')
-        rl.close()
-        process.exit()
-    } else if (input.toLowerCase() === 'n') {
+    } 
+    
+    else if (input.toLowerCase() === 'l') {
+        return promptTopLevelComment(pr)
+    }
+    
+    else if (input.toLowerCase() === 'n') {
         if (isLastPage) {
             cl('No more comments', 'brightRed')
             return buildComments({ ...requestOptions, pull_request_id: prId }).then(promptCommentsPage)
         }
-        c('Loading...')
+        cl('Loading...', 'brightRed')
         buildComments({ ...requestOptions, pull_request_id: prId, page: requestOptions.page += 1 }).then(promptCommentsPage)
-    } else if (input.toLowerCase() === 'h') {
+    } 
+    
+    else if (input.toLowerCase() === 'h') {
         if (isFirstPage) {
             cl('You are at the first page already...', 'brightRed')
             return buildComments({ ...requestOptions, pull_request_id: prId }).then(promptCommentsPage)
         }
-        c('Loading...')
+        cl('Loading...', 'brightRed')
         buildComments({ ...requestOptions, pull_request_id: prId, page: requestOptions.page -= 1 }).then(promptCommentsPage)
     }
-    // else if (input.toLowerCase() === 'l') {
-    //     c('Fetching PR list...')
-    //     return buildPrList({ ...requestOptions, page: 1 }).then(promptPrSelectionPage)
-    // } 
+
     else if (input.toLowerCase().match(/(\d{1})/) && input <= x?.values?.length) {
         return promptRespondToComment(x?.values?.[input], x?.page)
-    } else if (input.toLowerCase() === 'd') {
+    } 
+    
+    else if (input.toLowerCase() === 'd') {
         cl('Loading...', 'brightRed')
         cl('This may take a while depending on the amount of changes...', 'magenta')
         return buildDiff({ ...requestOptions, pull_request_id: prId }).then(x => promptDiffOptions(x, 'comments'))
     }
+
     else if (input.toLowerCase() === 'b') {
         return buildPrOverview({ ...requestOptions, pull_request_id: prId }).then(promptPrOverview)
     }
+
     else {
         cl('Invalid selection', 'brightRed')
         return buildComments({ ...requestOptions, pull_request_id: prId }).then(promptCommentsPage)
@@ -141,11 +146,36 @@ const promptRespondToComment = async (commentData, page) => {
                 cl('Success!', 'green')
                 return buildComments({ ...requestOptions, pull_request_id: commentData.pullrequest.id, page: 1 }).then(promptCommentsPage)
             } catch (err) {
-                c('Error:', err.error)
+                cl(`Error: ${err.error}`, 'brightRed')
             }
         } else {
             return buildComments({ ...requestOptions, pull_request_id: commentData.pullrequest.id, page }).then(promptCommentsPage)
         }
+    }
+}
+
+const promptTopLevelComment = async (pr) => {
+    // c(pr)
+    const comment = await question('Comment: ');
+    const commentOptions = {
+        _body: {
+            content: { raw: comment }
+        },
+        pull_request_id: pr.prData.data.id
+    }
+
+    bar('=');
+    c(comment);
+    bar('=');
+
+    const confirmSend = await question('Are you sure you want to send (y/n)?: ');
+    if (confirmSend.toLowerCase() === 'y') {
+        await createComment({ ...requestOptions, ...commentOptions }).then(res => {
+            c(res)
+        })
+    } else {
+        displayPrOverview(pr);
+        return promptPrOverview(pr)
     }
 }
 
@@ -156,14 +186,52 @@ const promptPrOverview = async (pr) => {
     // const prId = pr.
     // c(pr)
 
-    const input = await question(`(c) comments, (f) files, (a) approve, (l) list pr's: `);
+    const input = await question(`(c) comments, (f) files, (a) approve, (m) main menu: `);
     if (input.toLowerCase() === 'f') {
         displayFileList(ds)
         return promptFileList(pr)
     } else if (input.toLowerCase() === 'c') {
-        // c(pr)
-        return buildComments({ ...requestOptions, page: 1, pull_request_id: pr.prData.data.id }).then(promptCommentsPage)
-    } else if (input.toLowerCase() === 'l') {
+        // await buildComments({ ...requestOptions, page: 1, pull_request_id: pr.prData.data.id }).then(commentData => promptCommentsPage(commentData, pr))
+        await buildComments({ ...requestOptions, page: 1, pull_request_id: pr.prData.data.id }).then(async commentData => {
+            
+            if (commentData.values.length === 0) {
+                cl('There are no comments on this PR yet...', 'brightRed');
+                c(n);
+                const leaveComment = await question('Would you like to leave one? (y/n): ');
+                if (leaveComment.toLowerCase() === 'y') {
+                    return promptTopLevelComment(pr)
+                } else {
+                    return buildPrOverview({ ...requestOptions, pull_request_id: pr.prData.data.id }).then(promptPrOverview)
+                }
+            //         bar('=');
+            //         const comment = await question('Response: ');
+            //         const commentOptions = {
+            //             _body: {
+            //                 content: { raw: comment }
+            //             },
+            //             pull_request_id: pr.prData.data.id,
+            //         }
+            //         const confirmSend = await question('Are you sure you want to send (y/n)? ');
+            //         if (confirmSend.toLowerCase() === 'y') {
+            //             createComment({ ...requestOptions, ...commentOptions }).then(x => {
+            //                 cl('Success!', 'brightGreen');
+            //                 return buildPrOverview({ ...requestOptions, pull_request_id: pr.prData.data.id }).then(promptPrOverview)
+            //             })
+            //         } else {
+            //             return buildPrOverview({ ...requestOptions, pull_request_id: pr.prData.data.id }).then(promptPrOverview)
+            //         }
+
+            //     } else {
+            //         return buildPrOverview({ ...requestOptions, pull_request_id: pr.prData.data.id }).then(promptPrOverview)
+                
+            // }
+            // else {
+            //     await buildComments({ ...requestOptions, page: 1, pull_request_id: pr.prData.data.id }).then(promptCommentsPage)
+            } else {
+                return promptCommentsPage(commentData, pr)
+            }
+        })
+    } else if (input.toLowerCase() === 'm') {
         cl('Loading...', 'brightRed')
         return buildPrList(requestOptions).then(promptPrSelectionPage)
     } else if (input.toLowerCase() === 'a') {
@@ -188,7 +256,7 @@ const promptFileList = async (pr) => {
     bar('=');
     const input = await question(`(0-${ds.values.length}) view diff, (b) back: `)
 
-    if (input.toLowerCase() === 'l') {
+    if (input.toLowerCase() === 'b') {
         displayPrOverview(pr)
         return promptPrOverview(pr)
     }
