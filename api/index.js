@@ -31,8 +31,8 @@ const getParentCommentData = async (requestOptions, comment_id) => {
 }
 
 const createComment = async (commentOptions) => {
-    const { data, headers } = await bitbucket.pullrequests.createComment({ ...commentOptions })
-    return {data, headers}
+    const { data } = await bitbucket.pullrequests.createComment({ ...commentOptions })
+    return data
 }
 
 const getPrActivity = async (requestOptions, prId) => {
