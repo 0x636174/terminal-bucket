@@ -321,7 +321,7 @@ const promptFileList = async (pr) => {
   }
 };
 
-// Prompt for viewing diff of single file
+// // Prompt for viewing diff of single file
 const promptSingleDiff = async (pr) => {
   bar("=");
   const input = await prompt(`(b) back: `);
