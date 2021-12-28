@@ -5,7 +5,8 @@
   "main": "terminalBucket.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node terminalBucket.js"
+    "start": "node terminalBucket.js",
+    "pretty": "prettier --write \"./**/*.{js,jsx,json}\""
   },
   "author": "death",
   "license": "ISC",
@@ -16,5 +17,8 @@
     "date-fns": "^2.22.1",
     "dotenv": "^10.0.0",
     "minimist": "^1.2.5"
+  },
+  "devDependencies": {
+    "prettier": "^2.3.2"
   }
 }

@@ -1,37 +1,69 @@
-const { getAllPrs, getPrActivity, getPrData, getParentCommentData, getDiff } = require('./api');
-const { displayPrList, displayComments, displayDiff } = require('./screens');
+const {
+  getAllPrs,
+  getPrActivity,
+  getPrData,
+  getParentCommentData,
+  getDiff,
+  getPr,
+  getDiffStat,
+} = require("./api");
+const { c } = require("./helpers");
+const {
+  displayPrList,
+  displayComments,
+  displayDiff,
+  displayPrOverview,
+} = require("./screens");
 
 // PR List
-const buildPrList = (options) => getAllPrs(options)
-    .then(async (allPrs) => {
-        const activity = await allPrs?.values?.map(async (item, index) => {
-            return getPrActivity(options, allPrs?.values[index].id).then(activityData => {
-                return item.activity = activityData
-            })
-        })
+const buildPrList = (options) =>
+  getAllPrs(options).then(async (allPrs) => {
+    const activity = await allPrs?.values?.map(async (item, index) => {
+      return getPrActivity(options, allPrs?.values[index].id).then(
+        (activityData) => {
+          return (item.activity = activityData);
+        }
+      );
+    });
 
-        await Promise.all(activity)
-        displayPrList(allPrs)
+    await Promise.all(activity);
+    if (allPrs?.values?.length === 0) {
+      c("No pull requests to show");
+    } else {
+      displayPrList(allPrs);
+    }
 
-        return allPrs
-    })
+    return allPrs;
+  });
 
 // Comments
-const buildComments = (options) => getPrData(options).then(async (allData) => {
+const buildComments = (options) =>
+  getPrData(options).then(async (allData) => {
     const updatedParents = await allData?.values?.map(async (item, index) => {
-        item.parent && await getParentCommentData(options, item?.parent?.id).then(parentData => item.parent = parentData)
-    })
-    await Promise.all(updatedParents)
-    displayComments(allData)
+      item.parent &&
+        (await getParentCommentData(options, item?.parent?.id).then(
+          (parentData) => (item.parent = parentData)
+        ));
+    });
+    await Promise.all(updatedParents);
+    displayComments(allData);
 
-    return allData
-})
+    return allData;
+  });
 
 // Diff
-const buildDiff = (options) => getDiff(options).then(
-    x => {
-        displayDiff(x)
-        return x.prId
-    })
+const buildDiff = (options) =>
+  getDiff(options).then((x) => {
+    displayDiff(x.data);
+    return x.prId;
+  });
 
-module.exports = { buildPrList, buildComments, buildDiff }
+// PR Overview
+const buildPrOverview = (options) =>
+  getPr(options).then(async (prData) => {
+    const diffStat = await getDiffStat({ ...options, pagelen: undefined });
+    displayPrOverview({ prData, diffStat });
+    return { prData, diffStat };
+  });
+
+module.exports = { buildPrList, buildComments, buildDiff, buildPrOverview };
